@@ -3,10 +3,26 @@
 Plugin Name: Integrate Launch Effect & ExactTarget
 Plugin URI: http://acumenholdings.com/
 Description: Integrates LE and ET and makes them work together. I call it LEET. Yeah, I call it that.
-Version: 0.2
+Version: 0.3
 Author: Brian Sage
 Author URI: http://twitter.com/briansage
+
+
+Changelog:
+
+v0.3
+ - Made LEET a little smarter, as to restrict email subscriptions for just ANY post.
+ - Played keep-away from admin, wp-includes, and user uploads.
+ - Added a few custom styles for content we like to use.
+
+v0.2
+ - Made it work by intercepting $_POST. Publicly accessible Github repo created.
+
+v0.1
+ - Tried using AJAX. IE sucks.
+
 */
+
 
 
 if (!class_exists("LEET")) {
@@ -16,54 +32,161 @@ if (!class_exists("LEET")) {
     }
 
     function plugin_loaded_action() {
-      if ($_SERVER['REQUEST_METHOD'] == 'POST' && !filter_var($email, FILTER_VALIDATE_EMAIL)):
-        global $LEET;
-        global $_POST;
+      if (
+        ($_SERVER['REQUEST_METHOD'] == 'POST') &&
+        !strstr($_SERVER['HTTP_REFERER'], '/wp-admin') && // No admin stuff
+        !strstr($_SERVER['REQUEST_URI'], '/wp-includes') && // No core stuff
+        !strstr($_SERVER['REQUEST_URI'], '/upload') // No user-uploaded stuff
+        ):
+        //print_r($_SERVER);
+
+        // Submit to something like Launch Effect
+        if (
+          strstr($_SERVER['REQUEST_URI'], '/wp-content') &&
+          strstr($_SERVER['REQUEST_URI'], '/themes') &&
+          strstr($_SERVER['REQUEST_URI'], '/post.php')
+          ):
+          $is_launcheffect = true;
+        endif;
+
         extract($_POST);
 
-        $et_MID = (get_option('LEET_exacttarget_mid') ? get_option('LEET_exacttarget_mid') : '10404059');
-        $et_LID = (get_option('LEET_exacttarget_lid') ? get_option('LEET_exacttarget_lid') : '29998414');
+        if(false):
+          global $LEET;
+          global $_POST;
 
-        $et_URL = 'http://cl.exct.net/subscribe.aspx?lid='.$et_LID.'&';
-        $et_date = date('m-j-y');
-        $et_post_arr = array(
-          'SubAction'     => 'sub_add_update',
-          'thx'           => 'http://countryoutfitter.com/',
-          'err'           => 'http://countryoutfitter.com/500',
-          'type'          => 'HTML',
-          'MID'           => $et_MID,
-          'submit_date'   => $et_date,
-          'Email Address' => $email
-        );
+          $et_MID = (get_option('LEET_exacttarget_mid') ? get_option('LEET_exacttarget_mid') : '10404059');
+          $et_LID = (get_option('LEET_exacttarget_lid') ? get_option('LEET_exacttarget_lid') : '29998414');
 
-        // url-encode the data
-        $et_get_str = $et_URL;
-        foreach($et_post_arr as $post_key=>$post_value):
-          $et_get_str .= urlencode($post_key).'='.urlencode($post_value).'&';
-        endforeach;
-        rtrim($et_get_str,'&');
+          $et_URL = 'http://cl.exct.net/subscribe.aspx?lid='.$et_LID.'&';
+          $et_date = date('m-j-y');
+          $et_post_arr = array(
+            'SubAction'     => 'sub_add_update',
+            'thx'           => 'http://countryoutfitter.com/',
+            'err'           => 'http://countryoutfitter.com/500',
+            'type'          => 'HTML',
+            'MID'           => $et_MID,
+            'submit_date'   => $et_date,
+            'Email Address' => $email
+          );
 
-        if (function_exists('curl_init')):
-          // open connection
-          //echo '<pre>$et_get_str == '.$et_get_str.'</pre>';
-          $ch = curl_init();
+          // url-encode the data
+          $et_get_str = $et_URL;
+          foreach($et_post_arr as $post_key=>$post_value):
+            $et_get_str .= urlencode($post_key).'='.urlencode($post_value).'&';
+          endforeach;
+          foreach($_POST as $post_key=>$post_value):
+            $et_get_str .= urlencode($post_key).'='.urlencode($post_value).'&';
+          endforeach;
+          rtrim($et_get_str,'&');
 
-          // Set cURL params
-          curl_setopt($ch, CURLOPT_URL, $et_get_str);
-          curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+          if (function_exists('curl_init') && ($is_launcheffect)):
+            // open connection
+            // echo '<pre>$et_get_str == '.$et_get_str.'</pre>';
+            $ch = curl_init();
 
-          // execute post
-          $et_result = curl_exec($ch); //echo '<pre>$et_result == '.$et_result.'</pre>';
+            // Set cURL params
+            curl_setopt($ch, CURLOPT_URL, $et_get_str);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-          // close connection
-          curl_close($ch);
-        else:
-          die('ERROR: cURL not installed!');
+            // execute post
+            $et_result = curl_exec($ch); //echo '<pre>$et_result == '.$et_result.'</pre>';
+
+            // close connection
+            curl_close($ch);
+          else:
+            die('ERROR: cURL or Launch Effect not installed!');
+          endif;
+
         endif;
 
       endif;
     }
 
+
+    function wp_head_action(){
+      $output = <<<HTML
+        <style type="text/css">
+        .referral-email-fields li {
+          clear: both;
+          margin-bottom: 6px;
+        }
+        input.styled-submit-button,
+        .css3button {
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 14px;
+          cursor:pointer;
+          color: #222;
+          height: 40px;
+          width: 80px;
+          background-color:#ffd942;
+          filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffd942', endColorstr='#c26823');
+          background: -moz-linear-gradient(
+            top,
+            #ffd942 0%,
+            #c26823);
+          background: -webkit-gradient(
+            linear, left top, left bottom, 
+            from(#ffd942),
+            to(#c26823));
+          -moz-border-radius: 10px;
+          -webkit-border-radius: 10px;
+          border-radius: 10px;
+          border: 1px solid #8c590e;
+          -moz-box-shadow:
+            0px 1px 3px rgba(000,000,000,0.5),
+            inset 0px 0px 2px rgba(255,255,255,1);
+          -webkit-box-shadow:
+            0px 1px 3px rgba(000,000,000,0.5),
+            inset 0px 0px 2px rgba(255,255,255,1);
+          box-shadow:
+            0px 1px 3px rgba(000,000,000,0.5),
+            inset 0px 0px 2px rgba(255,255,255,1);
+          text-shadow:
+            0px -1px 0px rgba(000,000,000,0.4),
+            0px 1px 0px rgba(255,255,255,0.3);
+          float:left;
+          margin: -2px 0 -2px 10px;
+        }
+        #signup a.css3button {
+          float: none;
+          margin: 0 auto;
+          padding: 10px 30px;
+          height: auto;
+          width: auto;
+          color: #000 !important;
+        }
+
+        #success-content {
+          text-align: center;
+        }
+        .social-container {
+          margin-bottom: 10px;
+        }
+        ul#inner-footer {
+          margin: 0;
+          min-height: 28px;
+        }
+        </style>
+HTML;
+      echo $output;
+    }
+
+
+    function wp_footer_action(){
+      $output = "";
+      $output .= <<<HTML
+        <script type="text/javascript">
+          jQuery('#form').submit(function(){
+            var pageView = (window.location.pathname + "/success/").replace('//','/');
+            //alert('track '+pageView);
+            pageTracker._trackPageview(pageView);
+          });
+        </script>
+HTML;
+
+      echo $output;
+    }
 
 
     function LEET_admin_menu () {
@@ -155,6 +278,8 @@ if (class_exists("LEET")) {
 
 if (isset($LEET)) :
   add_action( 'plugins_loaded', array(&$LEET,'plugin_loaded_action') );
+  add_action( 'wp_head', array(&$LEET,'wp_head_action') );
+  add_action( 'wp_footer', array(&$LEET,'wp_footer_action') );
   add_action( 'admin_menu', array(&$LEET,'LEET_admin_menu') );
   
   // Warnings
