@@ -163,10 +163,6 @@ if (!class_exists("LEET")) {
         .social-container {
           margin-bottom: 10px;
         }
-        ul#inner-footer {
-          margin: 0;
-          min-height: 28px;
-        }
         </style>
 HTML;
       echo $output;
@@ -180,7 +176,9 @@ HTML;
           jQuery('#form').submit(function(){
             var pageView = (window.location.pathname + "/success/").replace('//','/');
             //alert('track '+pageView);
-            pageTracker._trackPageview(pageView);
+            try{
+              pageTracker._trackPageview(pageView);
+            } catch(err) {};
           });
         </script>
 HTML;
