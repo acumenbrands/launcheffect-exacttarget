@@ -3,7 +3,7 @@
 Plugin Name: Integrate Launch Effect & ExactTarget
 Plugin URI: http://acumenholdings.com/
 Description: Integrates LE and ET and makes them work together. I call it LEET. Yeah, I call it that.
-Version: 0.3
+Version: 0.3.1
 Author: Brian Sage
 Author URI: http://twitter.com/briansage
 
@@ -176,10 +176,10 @@ HTML;
       $output .= <<<HTML
         <script type="text/javascript">
           jQuery('#form').submit(function(){
-            var pageView = (window.location.pathname + "/success/").replace('//','/');
+            var pv = (window.location.pathname + "/success/").replace('//','/');
             //alert('track '+pageView);
             try{
-              pageTracker._trackPageview(pageView);
+              _gaq.push(['_trackPageview', pv ]);
             } catch(err) {};
           });
         </script>
@@ -288,7 +288,7 @@ if (isset($LEET)) :
   if (!get_option('LEET_exacttarget_mid') && !get_option('LEET_exacttarget_lid') && !isset($_POST['submit'])):
     add_action('admin_notices', array(&$LEET,'LEET_warning') );
   endif;
-  
+
   if (!function_exists('curl_init')):
     add_action('admin_notices', array(&$LEET,'LEET_curl_warning') );
   endif;
