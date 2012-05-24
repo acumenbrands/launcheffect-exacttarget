@@ -51,7 +51,7 @@ if (!class_exists("LEET")) {
 
         extract($_POST);
 
-        if(false):
+        if($is_launcheffect):
           global $LEET;
           global $_POST;
 
@@ -82,7 +82,7 @@ if (!class_exists("LEET")) {
 
           if (function_exists('curl_init') && ($is_launcheffect)):
             // open connection
-            // echo '<pre>$et_get_str == '.$et_get_str.'</pre>';
+            //echo '<pre>$et_get_str == '.$et_get_str.'</pre>';
             $ch = curl_init();
 
             // Set cURL params
@@ -95,10 +95,12 @@ if (!class_exists("LEET")) {
             // close connection
             curl_close($ch);
           else:
-            die('ERROR: cURL or Launch Effect not installed!');
+            die('ERROR: cURL not installed!');
           endif;
 
-        endif;
+        else:
+          die('ERROR: Launch Effect not installed!');
+        endif;;
 
       endif;
     }
@@ -259,9 +261,11 @@ HTML;
     }
 
     function LEET_warning() {
-      echo "
-      <div id='LEET-warning' class='updated fade'><p><strong>".__('ExactTarget Settings are almost ready.')."</strong> ".sprintf(__('You must <a href="%1$s">enter an ExactTarget MID and LID</a> for it to work.'), "admin.php?page=leet_settings")."</p></div>
-      ";
+      echo "<div id='LEET-warning' class='updated fade'><p><strong>ExactTarget Settings are almost ready.</strong> ".sprintf('You must <a href="%1$s">enter an ExactTarget MID and LID</a> for it to work.', "admin.php?page=leet_settings")."</p></div>";
+    }
+
+    function LEET_curl_warning() {
+      echo "<div id='LEET-curl-warning' class='updated fade'><p><strong>cURL PHP is not installed on this server. ExactTarget will not work without cURL library installed.</strong></p></div>";
     }
 
   }
@@ -283,6 +287,10 @@ if (isset($LEET)) :
   // Warnings
   if (!get_option('LEET_exacttarget_mid') && !get_option('LEET_exacttarget_lid') && !isset($_POST['submit'])):
     add_action('admin_notices', array(&$LEET,'LEET_warning') );
-  ENDIF;
+  endif;
+  
+  if (!function_exists('curl_init')):
+    add_action('admin_notices', array(&$LEET,'LEET_curl_warning') );
+  endif;
 
 endif;
