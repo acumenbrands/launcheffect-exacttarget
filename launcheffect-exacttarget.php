@@ -177,7 +177,6 @@ HTML;
         <script type="text/javascript">
           jQuery('#form').submit(function(){
             var pv = (window.location.pathname + "/success/").replace('//','/');
-            //alert('track '+pageView);
             try{
               _gaq.push(['_trackPageview', pv ]);
             } catch(err) {};
