@@ -333,6 +333,14 @@ HTML;
               _gaq.push(['_trackPageview', pv ]);
             } catch(err) {};
           });
+
+          jQuery('#success').submit(function(){
+            // Track Analytics Goal
+            var pv = (window.location.pathname + "/share/").replace('//','/');
+            try{
+              _gaq.push(['_trackPageview', pv ]);
+            } catch(err) {};
+          });
         </script>
 HTML;
 
