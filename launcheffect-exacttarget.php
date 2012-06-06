@@ -260,7 +260,7 @@ if (!class_exists("LEET")) {
           border-radius: 2px;
           width:auto;
           font-size: 1.1em;
-          height:34px;
+          height:33px;
           margin:0;
           padding:0px 15px;
           color: #fff;
@@ -341,6 +341,7 @@ HTML;
         $et_ref_LID = get_option('LEET_exacttarget_referral_lid');
         $et_ref_MID = get_option('LEET_exacttarget_referral_mid');
         $et_ref_date = date('m-j-y');
+        $template_url = get_bloginfo('template_url');
 
         $utm_campaign_output = (array_key_exists('utm_campaign',$_GET)) ? '<input type="hidden" name="utm_campaign" value="'.$_GET['utm_campaign'].'">' : '';
 
@@ -354,8 +355,8 @@ HTML;
               <input type="hidden" id="referral-is_referral" name="is_referral" value="1">
 
               <div class="ajax_notices" style="display:none; height:42px; position:relative;">
-                <p class="notice_submitting" style="display:none; position:absolute;">Sharing link...</p>
-                <p class="notice_success" style="display:none; position:absolute;">Link shared! <a href="http://www.countryoutfitter.com/codes/FBFAMILY10?redirect_to=/cowboy-boots&signup=new" style="text-decoration:underline;>Start shopping with 10% off now!</a></p>
+                <p class="notice_submitting" style="display:none; position:absolute;">Sharing link... <img src="{$template_url}/im/ajax-loader.gif"></p>
+                <p class="notice_success" style="display:none; position:absolute;">Link shared! <a href="http://www.countryoutfitter.com/codes/FBFAMILY10?redirect_to=/cowboy-boots&signup=new" style="text-decoration:underline;">Start shopping with 10% off now!</a></p>
               </div>
 
               <div style="float:left; width:316px;">
