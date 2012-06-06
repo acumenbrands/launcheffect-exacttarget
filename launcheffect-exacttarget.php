@@ -24,7 +24,6 @@ v0.1
 */
 
 
-
 if (!class_exists("LEET")) {
   class LEET {
 
@@ -54,53 +53,143 @@ if (!class_exists("LEET")) {
         if($is_launcheffect):
           global $LEET;
           global $_POST;
+          global $wpdb;
+          global $li_stats_table;
 
-          $et_MID = (get_option('LEET_exacttarget_mid') ? get_option('LEET_exacttarget_mid') : '10404059');
-          $et_LID = (get_option('LEET_exacttarget_lid') ? get_option('LEET_exacttarget_lid') : '29998414');
+          /* // Unused
+          $user_code = $code;
+          // Check for returning user
+          if(filter_var($email, FILTER_VALIDATE_EMAIL)) :
+            $li_stats_table = $wpdb->prefix . "launcheffect";
 
-          $et_URL = 'http://cl.exct.net/subscribe.aspx?lid='.$et_LID.'&';
-          $et_date = date('m-j-y');
+            function fknQuery($query, $type) {
+              global $wpdb;
+              $result = $wpdb->$type( $query );
+              return $result;
+            }
+
+            $count = fknQuery(fknQuery("SELECT COUNT(*) FROM $li_stats_table WHERE email = '$email'", 'prepare'), 'get_var');
+
+            if ($count > 0) :
+              $stats = fknQuery("SELECT * FROM $li_stats_table WHERE email = '$email' ORDER BY time DESC", 'get_results');
+              foreach ($stats as $stat) {
+                $user_code = $stat->code;
+              }
+            endif;
+          endif;
+
           $et_post_arr = array(
-            'SubAction'     => 'sub_add_update',
-            'thx'           => 'http://countryoutfitter.com/',
-            'err'           => 'http://countryoutfitter.com/500',
-            'type'          => 'HTML',
-            'MID'           => $et_MID,
-            'submit_date'   => $et_date,
-            'Email Address' => $email
+            'user_code'      => $user_code
           );
-
-          // url-encode the data
-          $et_get_str = $et_URL;
-          foreach($et_post_arr as $post_key=>$post_value):
-            $et_get_str .= urlencode($post_key).'='.urlencode($post_value).'&';
-          endforeach;
-          foreach($_POST as $post_key=>$post_value):
-            $et_get_str .= urlencode($post_key).'='.urlencode($post_value).'&';
-          endforeach;
-          rtrim($et_get_str,'&');
+          */
 
           if (function_exists('curl_init') && ($is_launcheffect)):
-            // open connection
-            //echo '<pre>$et_get_str == '.$et_get_str.'</pre>';
-            $ch = curl_init();
 
-            // Set cURL params
-            curl_setopt($ch, CURLOPT_URL, $et_get_str);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            function do_et_post($et_post_arr){
+              $et_url = 'http://cl.exct.net/subscribe.aspx?';
+              $et_date = date('m-j-y');
+              $et_post_defaults = array(
+                'SubAction'     => 'sub_add_update',
+                'thx'           => 'http://countryoutfitter.com/',
+                'err'           => 'http://countryoutfitter.com/500',
+                'type'          => 'HTML',
+                'submit_date'    => $et_date
+              );
+              $et_post_arr = array_merge($et_post_defaults, $et_post_arr);
+              $et_get_str .= http_build_query($et_post_arr,'','&');
+              //echo '<pre>$et_get_str == '.$et_url.$et_get_str."</pre>\n";
 
-            // execute post
-            $et_result = curl_exec($ch); //echo '<pre>$et_result == '.$et_result.'</pre>';
+              // open connection
+              $ch = curl_init();
 
-            // close connection
-            curl_close($ch);
+              // Set cURL params
+              curl_setopt($ch, CURLOPT_URL, $et_url.$et_get_str);
+              curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+              // execute post
+              $et_result = curl_exec($ch);
+
+              // close connection
+              curl_close($ch);
+            }
+
+            
+            // Submit a subscription
+            if(!array_key_exists('is_referral', $_POST)):
+
+              $et_MID = get_option('LEET_exacttarget_mid');
+              $et_LID = get_option('LEET_exacttarget_lid');
+              $post_arr = array(
+                'lid'   => $et_LID,
+                'mid'   => $et_MID
+              );
+              foreach($_POST as $post_key => $post_value):
+                switch ($post_key){
+                  case 'utm_campaign':
+                  //case 'utm_content':
+                  //case 'utm_medium':
+                  //case 'utm_source':
+                  //case 'code':
+                    $post_arr[$post_key] = $post_value;
+                    break;
+                  case 'email':
+                    $post_arr['Email Address'] = $post_value;
+                    $post_arr['Subscriber Key'] = $post_value;
+                    break;
+                }
+              endforeach;
+              do_et_post($post_arr);
+
+
+            // Submit a referral
+            else:
+              $return_arr = array();
+
+              foreach($_POST as $post_key => $post_value):
+                if (strpos($post_key, 'referral-email-') !== false && filter_var($post_value, FILTER_VALIDATE_EMAIL)):
+
+                  $return_arr[$post_key] = $post_value;
+
+                  $et_ref_MID = get_option('LEET_exacttarget_referral_mid');
+                  $et_ref_LID = get_option('LEET_exacttarget_referral_lid');
+                  $ref_post_arr = array(
+                    'lid'            => $et_ref_LID,
+                    'mid'            => $et_ref_MID,
+                    'Email Address'  => $post_value,
+                    'Subscriber Key' => 'nobody@acumenholdings.com'
+                  );
+                  foreach($_POST as $ref_post_key => $ref_post_value):
+                    switch ($ref_post_key){
+                      case 'utm_campaign':
+                      //case 'utm_content':
+                      //case 'utm_medium':
+                      //case 'utm_source':
+                      //case 'code':
+                      case 'referred_by':
+                        $ref_post_arr[$ref_post_key] = $ref_post_value;
+                        break;
+                    }
+                  endforeach;
+                  do_et_post($ref_post_arr);
+
+                endif;
+              endforeach;
+
+            endif;
+
+            if(array_key_exists('is_referral',$_POST) && $_POST['is_referral']=='1'):
+
+              // If referral form, stop the presses.
+              echo json_encode($return_arr);
+
+              die('');
+            endif;
+
           else:
             die('ERROR: cURL not installed!');
           endif;
 
-        else:
-          die('ERROR: Launch Effect not installed!');
-        endif;;
+        endif;
 
       endif;
     }
@@ -173,9 +262,11 @@ HTML;
 
     function wp_footer_action(){
       $output = "";
+
       $output .= <<<HTML
         <script type="text/javascript">
           jQuery('#form').submit(function(){
+            // Track Analytics Goal
             var pv = (window.location.pathname + "/success/").replace('//','/');
             try{
               _gaq.push(['_trackPageview', pv ]);
@@ -183,6 +274,152 @@ HTML;
           });
         </script>
 HTML;
+
+      if(get_option('LEET_exacttarget_referral_enabled') && (get_option('LEET_exacttarget_referral_lid') != get_option('LEET_exacttarget_lid'))):
+
+        $et_ref_LID = get_option('LEET_exacttarget_referral_lid');
+        $et_ref_MID = get_option('LEET_exacttarget_referral_mid');
+        $et_ref_date = date('m-j-y');
+
+        $utm_campaign_output = (array_key_exists('utm_campaign',$_GET)) ? '<input type="hidden" name="urm_campaign" value="'+$_GET['utm_campaign']+'">' : '';
+
+        $output .= <<<HTML
+          <ul id="referral-form-layout">
+            <li class="first" style="margin: 0 0 6px;">
+              <label for="email" style="visibility: visible; ">SHARE WITH FRIENDS</label>
+              <div class="clear"></div>
+              {$utm_campaign_output}
+              <input type="hidden" id="referral-referred_by" name="referred_by" value="undefined">
+              <input type="hidden" id="referral-is_referral" name="is_referral" value="1">
+              <input type="text" id="referral-email-01" name="referral-email-01" style="width: 293px;" placeholder="Email 1 (required)" required="required" data-rel="referral-email">
+              <span id="referral-submit-button-border"><input type="submit" class="css3button" name="submit" value="SUBMIT" id="referral-submit-button"></span>
+              <div class="clear"></div>
+            </li>
+            <li style="margin: 0 0 6px;">
+              <input type="text" id="referral-email-02" name="referral-email-02" style="width: 293px;" placeholder="Email 2" data-rel="referral-email">
+              <div class="clear"></div>
+            </li>
+            <li style="margin: 0 0 6px;">
+              <input type="text" id="referral-email-03" name="referral-email-03" style="width: 293px;" placeholder="Email 3" data-rel="referral-email">
+              <div class="clear"></div>
+            </li>
+          </ul>
+
+          <script type="text/javascript">
+            var Searchmonger = {
+              // Not sure I'm even going to use this.
+
+              find: function(search_term,url_Str){
+                var win_search, win_search_split;
+
+                try {
+                  var search_arr = (typeof url_Str == 'undefined') ? Searchmonger.parse(url_Str) : url_Str;
+                  
+                  if (typeof search_arr[search_term] != 'undefined') {
+                    return search_arr[search_term];
+                  } else {
+                    return '';
+                  }
+
+                } catch(err) {
+                  if(typeof window.console != 'undefined')
+                    console.log('blarp!');
+                }
+              },
+
+              parse: function(url_Str) {
+                var win_search, win_search_split;
+                var search_assarr = {};
+                try {
+                  win_search = (typeof url_Str == 'undefined') ? window.location.search : url_Str;
+                  if(typeof win_search.length != 'undefined')
+                    win_search_split = win_search.replace('?','').split('&');
+                  for (i=0; i<win_search_split.length; i++){
+                    if(win_search_split[i].indexOf('=')>0){
+                      search_assarr[ win_search_split[i].split('=')[0] ] = win_search_split[i].split('=')[1];
+                    }
+                  }
+                   
+                  return search_assarr;
+
+                } catch(err) {
+                  if(typeof window.console != 'undefined')
+                    console.log('blarp!');
+                }
+              }
+            }
+
+            // Handle form submit
+            jQuery('form#success').submit(function(e){
+
+              e.preventDefault();
+
+              // Append referred_by email input
+              jQuery(this).find('#referral-referred_by').val( jQuery('form#form input#email').val() );
+
+              referral_post_data = jQuery("form#success").serialize();
+              referral_post_url = jQuery('#templateURL').attr('value') + "/post.php";
+
+              jQuery.ajax({
+                type: "POST",
+                url: referral_post_url,
+                cache: false,
+                data: referral_post_data,
+                dataType: "json",
+                beforeSend: function(){
+                  // console.log('referral_post_data:');
+                  // console.log(referral_post_data);
+                },
+                success: function(data, textStatus, jqXHR){
+                  // console.log("/n/ndata:/n");
+                  // console.log(data);
+                  // console.log("/n/ntextStatus:/n");
+                  // console.log(textStatus);
+                }
+              });
+
+            });
+
+
+            jQuery(function(){
+              // Preserve campaign URL information in all forms
+              var search_assarr = Searchmonger.parse();
+              for(key in search_assarr) {
+                jQuery('form').append('<input type="hidden" name="'+key+'" value="'+Searchmonger.find(key)+'" data-rel="extended">');
+              }
+
+              // Preserve whitelist campaign URL information in links
+              for(key in search_assarr) {
+                switch (key) {
+                  case 'utm_campaign':
+                  case 'utm_content':
+                  case 'utm_medium':
+                  case 'utm_source':
+                    jQuery('a[href*="'+window.location.hostname.replace(/www\.|\.com|\-fb\.local|\.local/,'')+'"]').each(function(){
+                      if(jQuery(this).attr('href').indexOf('?') == -1){
+                        jQuery(this).attr('href', jQuery(this).attr('href')+'?');
+                      }
+                      jQuery(this).attr('href', jQuery(this).attr('href')+'&'+key+'='+Searchmonger.find(key));
+                      // console.log(this);
+                    });
+                    break;
+                }
+              }
+            });
+            jQuery('#referral-form-layout').appendTo('form#success');
+
+
+
+            // Example: http://www.countryoutfitter.com/facebook-ariat/?utm_source=facebook&utm_medium=social&utm_content=country%2Bmusic&utm_campaign=Ariat22_26
+            // Add 'Subscriber Key' to ET info passed
+            // utm_source = 'facebook'
+            // utm_medium = utm_source
+            // utm_content = 'country%2Bmusic'
+            // utm_term = utm_content 
+            // utm_campaign = 'Ariat22_26'
+          </script>
+HTML;
+      endif;
 
       echo $output;
     }
@@ -195,8 +432,11 @@ HTML;
         // Setup ExactTarget Settings Form
         
         $options = array(
+          'exacttarget_mid',
           'exacttarget_lid',
-          'exacttarget_mid'
+          'exacttarget_referral_enabled',
+          'exacttarget_referral_mid',
+          'exacttarget_referral_lid'
         );
         foreach ( $options as $opt ){
           delete_option ( 'LEET_'.$opt, $_POST[$opt] );
@@ -221,26 +461,59 @@ HTML;
           <div id="col-left">
             <div class="col-wrap">
               <div class="form-wrap">
-
                 
-                <hr>
-                
-                <h3>ExactTarget Campaign</h3>
+                <h3>ExactTarget <i>Signup</i> Campaign</h3>
+                <p>These are the list IDs needed for the <strong>primary squeeze page signup action</strong>.</p>
                 
                 <div class="form-field">
                   <label for="exacttarget_mid">MID</label>
                   <input name="exacttarget_mid" type="text" id="exacttarget_mid" value="<?php echo get_option('LEET_exacttarget_mid'); ?>" />
-                  <p>Enter the ExactTarget <b>Business Unit ID</b>.</p>
+                  <p>The ExactTarget <b>Business Unit ID</b>.</p>
                   <p>Usually, an 8-digit number in peranthesis, next to &quot;Welcome, Company Name&quot; in the upper-right of the dashboard.</p>
                 </div>
 
                 <div class="form-field">
                   <label for="exacttarget_lid">LID</label>
                   <input name="exacttarget_lid" type="text" id="exacttarget_lid" value="<?php echo get_option('LEET_exacttarget_lid'); ?>" />
-                  <p>Enter the ExactTarget <b>List ID</b>.</p>
+                  <p>The ExactTarget <b>List ID</b>.</p>
                 </div>
 
-                <hr>                
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="col-container">
+          <div id="col-left">
+            <div class="col-wrap">
+              <div class="form-wrap">
+                
+                <h3>ExactTarget <i>Referral</i> Campaign</h3>
+                <p>Used to handle <strong>email referral lists. Not subscribers.</strong></p>
+                
+                <table class="form-table">
+                  <tbody>
+                  <tr>
+                    <th scope="row">Referral Form</th>
+                    <td><label for="exacttarget_referral_enabled"><input type="checkbox" name="exacttarget_referral_enabled" id="exacttarget_referral_enabled" value="1"<?php checked( 1 == get_option('LEET_exacttarget_referral_enabled' )); ?> class="tog"/> enable.</label></td>
+                  </tr>
+                  <tr>
+                  </tbody>
+                </table>
+
+                <div class="form-field">
+                  <label for="exacttarget_referral_mid">MID</label>
+                  <input name="exacttarget_referral_mid" type="text" id="exacttarget_referral_mid" value="<?php echo get_option('LEET_exacttarget_referral_mid'); ?>" />
+                  <p>The ExactTarget <b>Business Unit ID</b>.</p>
+                  <p>May be the same as MID above.</p>
+                </div>
+
+                <div class="form-field">
+                  <label for="exacttarget_referral_lid">LID</label>
+                  <input name="exacttarget_referral_lid" type="text" id="exacttarget_referral_lid" value="<?php echo get_option('LEET_exacttarget_referral_lid'); ?>" />
+                  <p>The ExactTarget <b>List ID</b>.</p>
+                  <p><strong>Must be different</strong> from Subscriber LID above.</p>
+                </div>
                 
                 <p class="submit">
                   <input type="submit" name="Submit" class="button-primary" value="Save Changes" />
