@@ -3,12 +3,16 @@
 Plugin Name: Integrate Launch Effect & ExactTarget
 Plugin URI: http://acumenholdings.com/
 Description: Integrates LE and ET and makes them work together. I call it LEET. Yeah, I call it that.
-Version: 0.3.1
+Version: 0.4
 Author: Brian Sage
 Author URI: http://twitter.com/briansage
 
 
 Changelog:
+
+v0.4
+ - Added multi-email referral email form to success page.
+ - IE still sucks. Balls. 
 
 v0.3
  - Made LEET a little smarter, as to restrict email subscriptions for just ANY post.
@@ -202,7 +206,14 @@ if (!class_exists("LEET")) {
           clear: both;
           margin-bottom: 6px;
         }
-        input.styled-submit-button,
+        #signup a.css3button {
+          float: none;
+          margin: 0 auto;
+          padding: 10px 30px;
+          height: auto;
+          width: auto;
+          color: #000 !important;
+        }
         .css3button {
           font-family: Arial, Helvetica, sans-serif;
           font-size: 14px;
@@ -239,18 +250,68 @@ if (!class_exists("LEET")) {
           float:left;
           margin: -2px 0 -2px 10px;
         }
-        #signup a.css3button {
-          float: none;
-          margin: 0 auto;
-          padding: 10px 30px;
-          height: auto;
-          width: auto;
-          color: #000 !important;
-        }
 
         #success-content {
           text-align: center;
         }
+        #signup input#submit-button,
+        #referral-submit-button {
+          border: none;
+          border-radius: 2px;
+          width:auto;
+          font-size: 1.1em;
+          height:34px;
+          margin:0;
+          padding:0px 15px;
+          color: #fff;
+          font-weight: bold;
+          text-transform: uppercase;
+          cursor: pointer;
+          box-shadow: none;
+          -moz-box-shadow: none;
+          -webkit-box-shadow: none;
+          font-family: Helvetica, Arial, sans-serif !important;
+          background-color:#f7af3b;
+          filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffd942', endColorstr='#c26823');
+          background: -moz-linear-gradient(
+            top,
+            #ffd942 0%,
+            #c26823);
+          background: -webkit-gradient(
+            linear, left top, left bottom, 
+            from(#ffd942),
+            to(#c26823));
+          background: -webkit-linear-gradient(
+            top,
+            #ffd942 0%,
+            #c26823);
+          background: linear-gradient(
+            top,
+            #ffd942 0%,
+            #c26823);
+          -moz-box-shadow:
+            0px 1px 3px rgba(000,000,000,0.5),
+            inset 0px 0px 2px rgba(255,255,255,1);
+          -webkit-box-shadow:
+            0px 1px 3px rgba(000,000,000,0.5),
+            inset 0px 0px 2px rgba(255,255,255,1);
+          box-shadow:
+            0px 1px 3px rgba(000,000,000,0.5),
+            inset 0px 0px 2px rgba(255,255,255,1);
+          font-family: Helvetica,Arial,sans-serif !important;
+          font-size: 1.1em;
+          font-weight: bold;
+          height: 36px;
+          text-transform: uppercase;
+          text-shadow: 0 -1px 0 #666;
+          width: auto;
+
+          -moz-transition: background-color 0.2s linear;
+          -webkit-transition: background-color 0.2s linear;
+          -o-transition: background-color 0.2s linear;
+          transition: background-color 0.2s linear 0s;
+        }
+
         .social-container {
           margin-bottom: 10px;
         }
@@ -281,46 +342,59 @@ HTML;
         $et_ref_MID = get_option('LEET_exacttarget_referral_mid');
         $et_ref_date = date('m-j-y');
 
-        $utm_campaign_output = (array_key_exists('utm_campaign',$_GET)) ? '<input type="hidden" name="urm_campaign" value="'+$_GET['utm_campaign']+'">' : '';
+        $utm_campaign_output = (array_key_exists('utm_campaign',$_GET)) ? '<input type="hidden" name="utm_campaign" value="'.$_GET['utm_campaign'].'">' : '';
 
         $output .= <<<HTML
           <ul id="referral-form-layout">
-            <li class="first" style="margin: 0 0 6px;">
+            <li class="first">
               <label for="email" style="visibility: visible; ">SHARE WITH FRIENDS</label>
               <div class="clear"></div>
               {$utm_campaign_output}
               <input type="hidden" id="referral-referred_by" name="referred_by" value="undefined">
               <input type="hidden" id="referral-is_referral" name="is_referral" value="1">
-              <input type="text" id="referral-email-01" name="referral-email-01" style="width: 293px;" placeholder="Email 1 (required)" required="required" data-rel="referral-email">
-              <span id="referral-submit-button-border"><input type="submit" class="css3button" name="submit" value="SUBMIT" id="referral-submit-button"></span>
+
+              <div class="ajax_notices" style="display:none; height:42px; position:relative;">
+                <p class="notice_submitting" style="display:none; position:absolute;">Sharing link...</p>
+                <p class="notice_success" style="display:none; position:absolute;">Link shared! <a href="http://www.countryoutfitter.com/codes/FBFAMILY10?redirect_to=/cowboy-boots&signup=new" style="text-decoration:underline;>Start shopping with 10% off now!</a></p>
+              </div>
+
+              <div style="float:left; width:316px;">
+                <input type="text" id="referral-email-01" name="referral-email-01" style="width: 293px;" placeholder="Email 1 (required)" required="required" data-rel="referral-email">
+
+                <div class="clear" style="height:6px;"></div>
+
+                <input type="text" id="referral-email-02" name="referral-email-02" style="width: 293px;" placeholder="Email 2" data-rel="referral-email">
+
+                <div class="clear" style="height:6px;"></div>
+
+                <input type="text" id="referral-email-03" name="referral-email-03" style="width: 293px;" placeholder="Email 3" data-rel="referral-email">
+
+                <div class="clear" style="height:6px;"></div>
+              </div>
+
+              <div style="float:left;">
+                <input type="submit" name="submit" value="SUBMIT" id="referral-submit-button" style="width:100px;">
+              </div>
+
               <div class="clear"></div>
-            </li>
-            <li style="margin: 0 0 6px;">
-              <input type="text" id="referral-email-02" name="referral-email-02" style="width: 293px;" placeholder="Email 2" data-rel="referral-email">
-              <div class="clear"></div>
-            </li>
-            <li style="margin: 0 0 6px;">
-              <input type="text" id="referral-email-03" name="referral-email-03" style="width: 293px;" placeholder="Email 3" data-rel="referral-email">
-              <div class="clear"></div>
+
             </li>
           </ul>
+          <script type="text/javascript">
+            jQuery('#referral-form-layout').appendTo('form#success');
+          </script>
 
           <script type="text/javascript">
             var Searchmonger = {
-              // Not sure I'm even going to use this.
-
               find: function(search_term,url_Str){
                 var win_search, win_search_split;
-
                 try {
                   var search_arr = (typeof url_Str == 'undefined') ? Searchmonger.parse(url_Str) : url_Str;
-                  
                   if (typeof search_arr[search_term] != 'undefined') {
                     return search_arr[search_term];
                   } else {
                     return '';
                   }
-
                 } catch(err) {
                   if(typeof window.console != 'undefined')
                     console.log('blarp!');
@@ -335,13 +409,10 @@ HTML;
                   if(typeof win_search.length != 'undefined')
                     win_search_split = win_search.replace('?','').split('&');
                   for (i=0; i<win_search_split.length; i++){
-                    if(win_search_split[i].indexOf('=')>0){
+                    if(win_search_split[i].indexOf('=')>0)
                       search_assarr[ win_search_split[i].split('=')[0] ] = win_search_split[i].split('=')[1];
-                    }
                   }
-                   
                   return search_assarr;
-
                 } catch(err) {
                   if(typeof window.console != 'undefined')
                     console.log('blarp!');
@@ -349,7 +420,7 @@ HTML;
               }
             }
 
-            // Handle form submit
+            // Handle referral form submit
             jQuery('form#success').submit(function(e){
 
               e.preventDefault();
@@ -360,22 +431,26 @@ HTML;
               referral_post_data = jQuery("form#success").serialize();
               referral_post_url = jQuery('#templateURL').attr('value') + "/post.php";
 
-              jQuery.ajax({
-                type: "POST",
-                url: referral_post_url,
-                cache: false,
-                data: referral_post_data,
-                dataType: "json",
-                beforeSend: function(){
-                  // console.log('referral_post_data:');
-                  // console.log(referral_post_data);
-                },
-                success: function(data, textStatus, jqXHR){
-                  // console.log("/n/ndata:/n");
-                  // console.log(data);
-                  // console.log("/n/ntextStatus:/n");
-                  // console.log(textStatus);
-                }
+              jQuery('form#success .ajax_notices .notice_success').fadeOut(0,function(){
+                jQuery('form#success .ajax_notices').slideDown(function(){
+                  jQuery('form#success .ajax_notices .notice_submitting').fadeIn(function(){
+                    jQuery.ajax({
+                      type: "POST",
+                      url: referral_post_url,
+                      cache: false,
+                      data: referral_post_data,
+                      dataType: "json",
+                      success: function(data, textStatus, jqXHR){
+                        jQuery('form#success .ajax_notices .notice_submitting').fadeOut(function(){
+                          jQuery('form#success .ajax_notices .notice_success').fadeIn(function(){
+                            jQuery('#referral-email-01,#referral-email-02,#referral-email-03').val('');
+                            jQuery('#referral-email-01')[0].focus();
+                          });
+                        });
+                      }
+                    });
+                  });
+                });
               });
 
             });
@@ -406,17 +481,7 @@ HTML;
                 }
               }
             });
-            jQuery('#referral-form-layout').appendTo('form#success');
 
-
-
-            // Example: http://www.countryoutfitter.com/facebook-ariat/?utm_source=facebook&utm_medium=social&utm_content=country%2Bmusic&utm_campaign=Ariat22_26
-            // Add 'Subscriber Key' to ET info passed
-            // utm_source = 'facebook'
-            // utm_medium = utm_source
-            // utm_content = 'country%2Bmusic'
-            // utm_term = utm_content 
-            // utm_campaign = 'Ariat22_26'
           </script>
 HTML;
       endif;
@@ -430,7 +495,6 @@ HTML;
       if ( count($_POST) > 0 && isset($_POST['LEET_settings'])):
           
         // Setup ExactTarget Settings Form
-        
         $options = array(
           'exacttarget_mid',
           'exacttarget_lid',
