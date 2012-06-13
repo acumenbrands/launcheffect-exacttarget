@@ -328,7 +328,7 @@ HTML;
         <script type="text/javascript">
           jQuery('#form').submit(function(){
             // Track Analytics Goal
-            var pv = (window.location.pathname + "/success/").replace('//','/');
+            var pv = ("countryoutfiters.com" + window.location.pathname + "/success/").replace('//','/');
             try{
               _gaq.push(['_trackPageview', pv ]);
             } catch(err) {};
@@ -336,7 +336,7 @@ HTML;
 
           jQuery('#success').submit(function(){
             // Track Analytics Goal
-            var pv = (window.location.pathname + "/share/").replace('//','/');
+            var pv = ("countryoutfitters.com" + window.location.pathname + "/share/").replace('//','/');
             try{
               _gaq.push(['_trackPageview', pv ]);
             } catch(err) {};
