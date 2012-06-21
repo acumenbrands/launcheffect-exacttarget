@@ -334,7 +334,7 @@ HTML;
             } catch(err) {};
 
             //Update site link
-            jQuery('a[href*="'+window.location.hostname.replace(/www\.|\.com|\-fb\.local|\.local/,'')+'"],a[href^="/"]').each(function(){
+            jQuery('a[href*="'+window.location.hostname.replace(/www\.|\.com|\-fb\.local|\.local|s\.com/g,'')+'"],a[href^="/"]').each(function(){
               var subscriber_key = jQuery('#email').val()
               var link_href = jQuery(this).attr('href');
               link_href += (jQuery(this).attr('href').indexOf('?') > 0) ? '&' : '?';
@@ -491,7 +491,7 @@ HTML;
                   case 'utm_content':
                   case 'utm_medium':
                   case 'utm_source':
-                    jQuery('a[href*="'+window.location.hostname.replace(/www\.|\.com|\-fb\.local|\.local/,'')+'"],a[href^="/"]').each(function(){
+                    jQuery('a[href*="'+window.location.hostname.replace(/www\.|\.com|\-fb\.local|\.local|s\.com/g,'')+'"],a[href^="/"]').each(function(){
                       if(jQuery(this).attr('href').indexOf('?') == -1){
                         jQuery(this).attr('href', jQuery(this).attr('href')+'?');
                       }
