@@ -328,7 +328,7 @@ HTML;
         <script type="text/javascript">
           jQuery('#form').submit(function(){
             // Track Analytics Goal
-            var pv = ("countryoutfiters.com" + window.location.pathname + "/success/").replace('//','/');
+            var pv = ("countryoutfitters.com" + window.location.pathname + "/success/").replace('//','/');
             try{
               _gaq.push(['_trackPageview', pv ]);
             } catch(err) {};
