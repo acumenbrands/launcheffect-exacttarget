@@ -332,6 +332,15 @@ HTML;
             try{
               _gaq.push(['_trackPageview', pv ]);
             } catch(err) {};
+
+            //Update site link
+            jQuery('a[href*="'+window.location.hostname.replace(/www\.|\.com|\-fb\.local|\.local/,'')+'"],a[href^="/"]').each(function(){
+              var subscriber_key = jQuery('#email').val()
+              var link_href = jQuery(this).attr('href');
+              link_href += (jQuery(this).attr('href').indexOf('?') > 0) ? '&' : '?';
+              link_href += 'subscriber_key=' + encodeURIComponent(subscriber_key);
+              jQuery(this).attr('href',link_href);
+            });
           });
 
           jQuery('#success').submit(function(){
@@ -364,7 +373,7 @@ HTML;
 
               <div class="ajax_notices" style="display:none; height:42px; position:relative;">
                 <p class="notice_submitting" style="display:none; position:absolute;">Sharing link... <img src="{$template_url}/im/ajax-loader.gif"></p>
-                <p class="notice_success" style="display:none; position:absolute;">Link shared! <a href="http://www.countryoutfitter.com/codes/FBFAMILY10?redirect_to=/cowboy-boots&signup=new" style="text-decoration:underline;">Start shopping with 10% off now!</a></p>
+                <p class="notice_success" style="display:none; position:absolute;">Link shared! <a class="start_shopping_link" href="/codes/FBFAMILY10?redirect_to=/cowboy-boots&signup=new" style="text-decoration:underline;">Start shopping with 10% off now!</a></p>
               </div>
 
               <div style="float:left; width:316px;">
@@ -466,6 +475,9 @@ HTML;
 
 
             jQuery(function(){
+              // Replace reminder link with primary content link href
+              jQuery('#referral-form-layout a.start_shopping_link').attr('href',jQuery('#success-content a').filter(':first').attr('href'));
+
               // Preserve campaign URL information in all forms
               var search_assarr = Searchmonger.parse();
               for(key in search_assarr) {
@@ -479,7 +491,7 @@ HTML;
                   case 'utm_content':
                   case 'utm_medium':
                   case 'utm_source':
-                    jQuery('a[href*="'+window.location.hostname.replace(/www\.|\.com|\-fb\.local|\.local/,'')+'"]').each(function(){
+                    jQuery('a[href*="'+window.location.hostname.replace(/www\.|\.com|\-fb\.local|\.local/,'')+'"],a[href^="/"]').each(function(){
                       if(jQuery(this).attr('href').indexOf('?') == -1){
                         jQuery(this).attr('href', jQuery(this).attr('href')+'?');
                       }
